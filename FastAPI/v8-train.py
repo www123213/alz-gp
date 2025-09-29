@@ -78,6 +78,81 @@ def rename_and_cleanup_models(results_save_dir, final_accuracy):
     except Exception as e:
         print(f"❌ 模型文件处理失败: {e}")
 
+# 新增：过拟合分析函数（对比训练/验证损失）
+def analyze_overfitting(results_save_dir):
+    """
+    分析过拟合风险：通过对比训练损失（train/loss）和验证损失（val/loss）的差距
+    逻辑：取最后10轮的损失均值，差距越大，过拟合风险越高
+    """
+    results_csv = os.path.join(results_save_dir, 'results.csv')
+    if not os.path.exists(results_csv):
+        print("⚠️  未找到训练指标文件（results.csv），无法分析过拟合")
+        return
+    
+    try:
+        import pandas as pd
+        df = pd.read_csv(results_csv)
+        
+        # 兼容不同YOLOv8版本的列名
+        train_loss_col = None
+        val_loss_col = None
+        if 'train/loss' in df.columns:
+            train_loss_col = 'train/loss'
+        elif 'metrics/train/loss' in df.columns:
+            train_loss_col = 'metrics/train/loss'
+        
+        if 'val/loss' in df.columns:
+            val_loss_col = 'val/loss'
+        elif 'metrics/val/loss' in df.columns:
+            val_loss_col = 'metrics/val/loss'
+        
+        # 若列名不存在，无法分析
+        if not train_loss_col or not val_loss_col:
+            print(f"⚠️  指标文件中缺少训练/验证损失列，无法分析过拟合（现有列：{df.columns.tolist()}）")
+            return
+        
+        # 过滤掉NaN值（训练早期可能无验证损失）
+        df_valid = df.dropna(subset=[train_loss_col, val_loss_col])
+        if len(df_valid) < 10:
+            print(f"⚠️  有效训练轮数不足10轮（仅{len(df_valid)}轮），过拟合分析结果可能不准确")
+            # 取所有有效轮数，而非固定10轮
+            last_n = len(df_valid)
+        else:
+            last_n = 10  # 取最后10轮，反映训练后期的损失趋势
+        
+        # 计算最后N轮的平均损失
+        last_n_data = df_valid.tail(last_n)
+        avg_train_loss = last_n_data[train_loss_col].mean()
+        avg_val_loss = last_n_data[val_loss_col].mean()
+        loss_gap = avg_val_loss - avg_train_loss  # 验证损失 - 训练损失（差距越大越危险）
+        
+        # 输出过拟合评估结果
+        print("\n" + "="*60)
+        print("📊 过拟合风险评估（基于最后{}轮损失）".format(last_n))
+        print("-"*60)
+        print(f"训练损失均值: {avg_train_loss:.4f}")
+        print(f"验证损失均值: {avg_val_loss:.4f}")
+        print(f"损失差距（验证-训练）: {loss_gap:.4f}")
+        print("-"*60)
+        
+        # 定义风险等级（根据分类任务常见阈值调整）
+        if loss_gap < 0.1:
+            print("✅ 低风险：训练/验证损失接近，过拟合风险极低")
+            print("   建议：保持当前参数，无需调整")
+        elif 0.1 <= loss_gap < 0.5:
+            print("⚠️  中等风险：验证损失略高于训练损失，存在轻微过拟合倾向")
+            print("   建议：1. 增加训练轮数（若未到patience上限） 2. 后续可尝试数据增强")
+        else:
+            print("❌ 高风险：验证损失远高于训练损失，存在明显过拟合")
+            print("   建议：1. 立即停止训练（避免继续过拟合） 2. 增加数据量或使用数据增强")
+            print("        3. 尝试减小模型尺寸（如从yolov8s换成yolov8n）或添加正则化")
+        print("="*60 + "\n")
+    
+    except ImportError:
+        print("⚠️  未安装pandas，无法分析过拟合（需执行：pip install pandas）")
+    except Exception as e:
+        print(f"⚠️  过拟合分析失败：{str(e)}")
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, default=None)
@@ -178,7 +253,7 @@ def main():
             imgsz=img_size,
             project='results',
             name=f'alzheimer_v8_{model_size}_{datetime.now().strftime("%m%d_%H%M")}',
-            plots=True,
+            plots=True,  # YOLOv8会自动生成损失曲线（results.png）
             val=True,
             patience=10,
             save_period=-1,
@@ -208,11 +283,21 @@ def main():
                         final_accuracy = df['metrics/accuracy_top1'].max() * 100
             print(f"🎯 最终验证准确率: {final_accuracy:.2f}%")
             rename_and_cleanup_models(results.save_dir, final_accuracy)
+            
+            # 新增：调用过拟合分析函数（训练完成后自动执行）
+            analyze_overfitting(results.save_dir)
+            
         except Exception as e:
             print(f"⚠️  获取准确率失败，使用默认值: {e}")
             final_accuracy = 85.0
             rename_and_cleanup_models(results.save_dir, final_accuracy)
-        print(f"📈 训练图表和指标: {results.save_dir}/")
+            # 即使准确率获取失败，也尝试分析过拟合
+            analyze_overfitting(results.save_dir)
+        
+        # 提示损失曲线图表位置（方便用户查看可视化结果）
+        loss_curve_path = os.path.join(results.save_dir, 'results.png')
+        if os.path.exists(loss_curve_path):
+            print(f"📈 训练/验证损失曲线已保存至: {loss_curve_path}")
         print(f"🔖 使用的模型: {model_name}")
     except ImportError:
         print("❌ 请先安装 ultralytics: pip install ultralytics")

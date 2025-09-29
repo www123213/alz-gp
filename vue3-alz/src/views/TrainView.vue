@@ -1,7 +1,7 @@
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, nextTick } from 'vue'
 import axios from 'axios'
-import { ElButton, ElCard, ElDivider, ElInputNumber, ElMessage, ElOption, ElSelect, ElTooltip } from 'element-plus'
+import { ElButton, ElCard, ElCheckbox, ElDivider, ElInputNumber, ElMessage, ElOption, ElSelect, ElTooltip } from 'element-plus'
 import { FolderOpened, InfoFilled } from '@element-plus/icons-vue'
 
 const datasetPath = ref('')
@@ -16,6 +16,8 @@ const trainLog = ref('')
 let logTimer = null
 const currentPid = ref(null)
 const isRunning = ref(false)
+const logContainer = ref(null)
+const autoScroll = ref(true)
 
 // 处理文件夹选项
 const onDatasetFolderChange = (e) => {
@@ -36,19 +38,26 @@ const fetchTrainLog = async () => {
   try {
     const res = await axios.get('http://localhost:8000/train/log')
     trainLog.value = res.data.log
-    // 检测 TRAIN_FINISHED / TRAIN_STOPPED 并停止轮询
-  if (trainLog.value && trainLog.value.includes('TRAIN_FINISHED')) {
-    stopLogPolling()
-    isRunning.value = false
-    trainStatus.value = '训练已完成'
-    ElMessage.success('训练完成')
-  }
-  if (trainLog.value && trainLog.value.includes('TRAIN_STOPPED')) {
-    stopLogPolling()
-    isRunning.value = false
-    trainStatus.value = '训练已停止'
-    ElMessage.info('训练被终止')
-  }
+    //滚动到最新
+    nextTick(() => {
+      if (logContainer.value && autoScroll.value){
+      logContainer.value.scrollTop = logContainer.value.scrollHeight
+      }
+    })
+
+      // 检测 TRAIN_FINISHED / TRAIN_STOPPED 并停止轮询
+    if (trainLog.value && trainLog.value.includes('TRAIN_FINISHED')) {
+      stopLogPolling()
+      isRunning.value = false
+      trainStatus.value = '训练已完成'
+      ElMessage.success('训练完成')
+    }
+    if (trainLog.value && trainLog.value.includes('TRAIN_STOPPED')) {
+      stopLogPolling()
+      isRunning.value = false
+      trainStatus.value = '训练已停止'
+      ElMessage.info('训练被终止')
+    }
   } catch {}
 }
 
@@ -162,13 +171,13 @@ const onStopTrain = async () => {
         <label>模型类型：</label>
         <div class="input-with-info">
           <ElSelect v-model="modelType" placeholder="选择模型类型" size="medium">
-            <ElOption value="n" label="nano" />
-            <ElOption value="s" label="small" />
+            <ElOption value="n" label="nano(最小最快)" />
+            <ElOption value="s" label="small(推荐)" />
             <ElOption value="m" label="medium" />
             <ElOption value="l" label="large"/>
-            <ElOption value="x" label="xlarge"/>
+            <ElOption value="x" label="xlarge(最准最大)"/>
           </ElSelect>
-          <ElTooltip content="n(最快最小) < s(推荐) < m < l < x(最准最大)，模型越大精度可能越高，但训练和推理速度越慢">
+          <ElTooltip content="模型越大精度可能越高，但训练和推理速度越慢">
             <InfoFilled class="info-icon" />
           </ElTooltip>
         </div>
@@ -184,25 +193,27 @@ const onStopTrain = async () => {
     </ElCard>
 
     <div class="progress-card">
-      <h2>训练进度</h2>
+      <div class="title-with-checkbox">
+        <h2>训练进度</h2>
+        <ElCheckbox v-model="autoScroll" label="自动滚动到底部" />
+      </div>
+
         <div v-if="trainStatus" class="train-status">{{ trainStatus }}</div>
-        <div v-if="trainLog" class="train-log">
+        <div v-if="trainLog" class="train-log" ref="logContainer">
           <h3>训练日志：</h3>
-          <pre>{{ trainLog }}</pre>
+          <pre >{{ trainLog }}</pre>
         </div>
 
       <template v-else>
-      <span>请上传数据集并开始训练</span>
-    </template>
+        <span>请上传数据集并开始训练</span>
+      </template>
     </div>
+
   </div>
-
-
-
 </template>
 
 <style scoped>
-@media screen and (max-width: 1200px){
+@media screen and (max-width: 1080px){
   .train-card, 
   .progress-card{
     width: 90%;
@@ -220,26 +231,20 @@ const onStopTrain = async () => {
   align-items: center;
 }
 .train-card {
-  background: #e8e8e8;
+  background: #f8f9fa;
   border-radius: 12px;
   box-shadow: 0 4px 16px #aeaeae;
-  padding: 32px 28px;
-  min-width: 420px;
-  min-height: 420px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
+  padding: 16px;
+  flex: 0 0 auto;
 }
 
 .form-item{
-  margin-bottom: 16px;
   display: flex;
   align-items: center;
+  margin-bottom: 16px;
   width: 100%;
 }
 .form-item label{
-  margin-bottom: 0;
   margin-right: 12px;
   min-width: 100px;
   font-weight: 500;
@@ -261,14 +266,21 @@ const onStopTrain = async () => {
   justify-content: center;
 }
 .train-status{
-
-  color: #409eff;
+  color: #67c23a;
   padding: 8px;
   border-radius: 4px;
   background-color: #ecf5ff;
+  font-weight: bold;
+}
+span{
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #ecf5ff;
+  font-weight: bold;
+  color: #67c23a;
 }
 .train-log {
-  margin-top: 18px;
+  margin-top: 16px;
   background: #fff;
   border-radius: 6px;
   box-shadow: 0 1px 4px #eee;
@@ -307,15 +319,17 @@ const onStopTrain = async () => {
   border-top: 3px solid #3498db;
 }
 .progress-card{
-  background-color: #e5ffdc;
-  padding: 32px 28px;
+  background-color: #fff0dc;
+  padding: 16px;
   border-radius: 12px;
   box-shadow: 0 4px 16px #aeaeae;
-  margin-bottom: 30px;
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-width: 500px;
   max-height: calc(100vh - 90px);
+}
+.title-with-checkbox{
+  display: flex;
+  align-items: center;
+  gap: 30px;
 }
 </style>

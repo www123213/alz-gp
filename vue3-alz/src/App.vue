@@ -4,19 +4,29 @@ import { RouterView } from 'vue-router'
 </script>
 
 <template>
-
     <nav class="sidenav">
      <div class="sidenav-title">阿尔茨海默诊断系统</div>
       <ul>
+        <li>
+          <RouterLink to="/login" active-class="nav-active" :class="{ 'nav-link': true }">
+            请先登录
+          </RouterLink>
+        </li>
         <li>
             <RouterLink to="/" exact-active-class="nav-active" :class="{ 'nav-link': true }">
               首页
             </RouterLink>
         </li>
+        
         <li>
             <RouterLink to="/detect" active-class="nav-active" :class="{ 'nav-link': true }">
               目标检测
             </RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/history" active-class="nav-active" :class="{ 'nav-link': true }">
+            检测记录
+          </RouterLink>
         </li>
         <li>
             <RouterLink to="/train" active-class="nav-active" :class="{ 'nav-link': true }">
@@ -39,7 +49,6 @@ import { RouterView } from 'vue-router'
             <span>基于YOLOv8的阿尔茨海默症辅助诊断系统 | 系统检测结果仅供参考</span>
         </div>
     </footer>
-
 </template>
 
 <style>
@@ -135,10 +144,11 @@ import { RouterView } from 'vue-router'
 h2 {
   font-size: 24px;
   color: #2c3e50; 
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   padding-bottom: 10px;
   border-bottom: 3px solid #3498db; 
   grid-column: 1 / -1;
   font-weight: bold;
 }
+
 </style>

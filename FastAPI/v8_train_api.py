@@ -47,7 +47,6 @@ async def train(
     ]
     env = os.environ.copy()
     env.setdefault('PYTHONUNBUFFERED', '1')
-    # Ensure subprocess uses UTF-8 for stdout/stderr to avoid UnicodeEncodeError on Windows
     env.setdefault('PYTHONIOENCODING', 'utf-8')
     env.setdefault('PYTHONUTF8', '1')
 
@@ -78,7 +77,7 @@ async def train(
         except Exception:
             pass
         try:
-            # 关闭父进程打开的 handle if still open
+            # 关闭父进程打开的
             f.close()
         except Exception:
             pass

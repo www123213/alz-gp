@@ -21,9 +21,6 @@
                   需全年龄段（尤其中青年）的重视。
                 </p>
           </div>
-          <!-- <div class="img-container">
-            <img src="/img1.png" alt="阿尔茨海默1">
-          </div> -->
           <img src="/img1.png" alt="阿尔茨海默1">
         </div>
 
@@ -67,7 +64,7 @@
   }
 }
 .main{
-  padding: 40px 40px;
+  padding: 40px;
 }
 
 .box-card {
