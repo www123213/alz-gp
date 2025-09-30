@@ -18,6 +18,7 @@ const currentPid = ref(null)
 const isRunning = ref(false)
 const logContainer = ref(null)
 const autoScroll = ref(true)
+const backupConfirmed = ref(false)
 
 // 处理文件夹选项
 const onDatasetFolderChange = (e) => {
@@ -85,6 +86,7 @@ const onTrain = async () => {
     formData.append('batch_size', batchSize.value)
     formData.append('img_size', imgSize.value)
     formData.append('model_type', modelType.value)
+    formData.append('backup_confirmed', backupConfirmed.value)
 
     const res = await axios.post('http://localhost:8000/train', formData)
     trainStatus.value = res.data.status
@@ -119,6 +121,7 @@ const onStopTrain = async () => {
     currentPid.value = null
   }
 }
+
 </script>
 
 <template>
@@ -183,8 +186,20 @@ const onStopTrain = async () => {
         </div>
       </div>
 
+      <div class="form-item">
+        <ElCheckbox v-model="backupConfirmed">
+          <span>
+            执行训练集完全去重（会永久删除完全重复的图像文件，建议先备份原始数据）
+          </span>
+        </ElCheckbox>
+      </div>
+
       <div class="train-btn-container">
-        <ElButton type="primary" @click="onTrain" :disabled="trainLoading || !datasetFolderName" :loading="trainLoading" size="large">
+        <ElButton type="primary" 
+        @click="onTrain" 
+        :disabled="trainLoading || !datasetFolderName" 
+        :loading="trainLoading" 
+        size="large">
           开始训练
         </ElButton>
         <ElButton type="danger" @click="onStopTrain" :disabled="!isRunning" size="large">停止训练</ElButton>
@@ -248,6 +263,14 @@ const onStopTrain = async () => {
   margin-right: 12px;
   min-width: 100px;
   font-weight: 500;
+}
+.form-item span{
+  color: #ff4d4f; 
+  font-weight: 500;
+  max-width: 250px;
+  display: block;
+  white-space: normal;
+  margin-top: 10px;
 }
 .input-with-info{
   display: flex;

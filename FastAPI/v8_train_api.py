@@ -7,8 +7,6 @@ import time
 import signal
 
 router = APIRouter()
-
-# 可配置的数据集根目录（当前端只传文件夹名时，会从此目录拼接），可通过环境变量覆盖
 DATASETS_ROOT = os.environ.get('DATASETS_ROOT', r'D:\毕设')
 
 @router.post("/train")
@@ -18,6 +16,7 @@ async def train(
     batch_size: int = Form(16),
     img_size: int = Form(640),
     model_type: str = Form("s"),
+    backup_confirmed: bool = Form(False),
     background_tasks: BackgroundTasks = None
 ):
     # 训练前清空日志
@@ -43,8 +42,11 @@ async def train(
         "--epochs", str(epochs),
         "--batch_size", str(batch_size),
         "--img_size", str(img_size),
-        "--model_type", model_type
+        "--model_type", model_type,
     ]
+    if backup_confirmed:
+        cmd.extend(["--deduplicate", "--backup_confirmed"])
+
     env = os.environ.copy()
     env.setdefault('PYTHONUNBUFFERED', '1')
     env.setdefault('PYTHONIOENCODING', 'utf-8')
