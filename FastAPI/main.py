@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from detect_api import router as detect_router
+from predict_api import router as predict_router
 from v8_train_api import router as train_router
 from history_router import router as history_router
 from database import init_db
@@ -17,7 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(detect_router)
+app.include_router(predict_router)
 app.include_router(train_router)
 app.include_router(history_router)
 

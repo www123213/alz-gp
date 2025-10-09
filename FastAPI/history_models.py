@@ -25,6 +25,7 @@ class DetectionRecord(SQLModel, table=True):
     bboxes: Optional[List[dict]] = Field(
         default=None,
         sa_column=Column(JSON),
+        description="检测任务专用：存储边界框信息（xyxy格式），含class、confidence、x1、y1、x2、y2"
     )
 
     image_path: Optional[str] = Field(default=None)

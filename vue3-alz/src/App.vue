@@ -19,7 +19,7 @@ import { RouterView } from 'vue-router'
         </li>
         
         <li>
-            <RouterLink to="/detect" active-class="nav-active" :class="{ 'nav-link': true }">
+            <RouterLink to="/predict" active-class="nav-active" :class="{ 'nav-link': true }">
               目标检测
             </RouterLink>
         </li>

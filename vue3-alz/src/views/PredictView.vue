@@ -122,22 +122,40 @@ const onPredict = async () => {
     formData.append('medical_id', patientForm.value.medical_id)
 
     const res = await axios.post('http://localhost:8000/predict', formData)
-    
-    if (res.data && res.data.saved_id) {
-      const mid = patientForm.value.medical_id || res.data.medical_id || ''
-      ElMessage.success(`检测已保存，病历号：${mid}`)
-      result.value = {
-        main_class: res.data.main_class,
-        confidence: res.data.confidence,
-        all_results: res.data.all_results,
-        bboxes: res.data.bboxes || [] 
+
+    // 打印完整响应方便调试（浏览器控制台）
+    console.log('predict response:', res.data)
+
+    // 统一归一化后端返回格式，确保前端始终能读取下面这些字段
+    const normalize = (data) => {
+      const out = {
+        main_class: null,
+        confidence: null,
+        all_results: [],
+        bboxes: []
       }
-    } else if (res.data && res.data.result) {
-      // 推理成功但保存失败
-      ElMessage.warning(`推理成功但未能保存：${res.data.error || '未知错误'}`)
-      result.value = res.data.result
-    } else if (res.data) {
-      result.value = res.data
+
+      if (!data) return out
+
+      // 优先使用顶层字段
+      out.main_class = data.main_class ?? data.result?.main_class ?? out.main_class
+      out.confidence = data.confidence ?? data.result?.confidence ?? out.confidence
+      out.all_results = data.all_results ?? data.result?.all_results ?? out.all_results
+      out.bboxes = data.bboxes ?? data.result?.bboxes ?? out.bboxes
+
+      // 有时后端会把推理结果放在 result 字段里
+      if ((!out.main_class || out.main_class === null) && data.result) {
+        out.main_class = data.result.main_class ?? out.main_class
+      }
+
+      return out
+    }
+
+    if (res.data && (res.data.saved_id || res.data.result || res.data.main_class)) {
+      if (res.data.saved_id) {
+        ElMessage.success(`检测已保存，病历号：${patientForm.value.medical_id || res.data.medical_id || ''}`)
+      }
+      result.value = normalize(res.data)
     } else {
       // 响应格式异常
       ElMessage.error('检测响应格式异常，请稍后重试')
@@ -195,7 +213,7 @@ const clearAll = () => {
 <template>
   <div class="box">
       <!-- 左侧组件 -->
-    <div class="detect-card">
+    <div class="predict-card">
     <h2>阿尔茨海默症MRI检测</h2>
       <div class="card-content">
         <!-- 信息表单 -->
@@ -242,7 +260,7 @@ const clearAll = () => {
 
       <div class="model-and-btn">
         <p v-if="selectedModel" class="model-name">已选模型: {{ selectedModel.name }}</p>
-        <p v-else class="model-hint">请选择.pt格式的模型文件</p>
+        <p v-else class="model-hint">请选择模型文件(分类/检测)</p>
         <div class="btn-group">
           <ElButton 
             type="primary"
@@ -264,7 +282,7 @@ const clearAll = () => {
 
   <!-- 右侧组件 -->
     <div class="result-card">
-    <h2>检测结果</h2>
+    <h2>MRI分析结果</h2>
     <template v-if="result && result.main_class && patientForm.patient_name">
       <div class="patient-info">
         <h3>病人信息：</h3>
@@ -276,11 +294,13 @@ const clearAll = () => {
       <hr>
     </template> 
 
-    <div v-if="loading" class="loading">正在检测，请稍候...</div>
+    <div v-if="loading" class="loading">正在分析，请稍候...</div>
     <template v-if="result && result.main_class">
       <div class="result-main">
         <h3>📊 主要诊断结果：<b>{{ classNamesZh[result.main_class] || result.main_class }}</b></h3>
-        <h3>置信度：<b style="color: darkgreen; font-weight: bold;">{{ (result.confidence * 100).toFixed(2) }}%</b></h3>
+        <h3>置信度：<b style="color: darkgreen; font-weight: bold;">
+        {{ ((result.confidence ?? 0) * 100).toFixed(2) }}%
+        </b></h3>
       </div>
 
       <hr>
@@ -288,7 +308,7 @@ const clearAll = () => {
       <div class="result-section">
         <h3>📈 详细概率分布：</h3>
         <ul class="prob-list" style="list-style: decimal;">
-          <li v-for="item in result.all_results" :key="item.class">
+          <li v-for="(item, idx) in result.all_results" :key="idx">
             {{ classNamesZh[item.class] || item.class }}：{{ (item.confidence * 100).toFixed(2) }}%
           </li>
         </ul>
@@ -337,14 +357,14 @@ const clearAll = () => {
   padding: 20px;
 }
 
-.detect-card {
+.predict-card {
   background: #f8f9fa;
   border-radius: 12px;
   box-shadow: 0 4px 16px #aeaeae;
   padding: 16px;
   flex: 0 0 auto;
 }
-.detect-card h2{
+.predict-card h2{
   text-align: center;
 }
 

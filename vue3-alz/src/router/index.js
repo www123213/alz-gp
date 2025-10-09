@@ -1,4 +1,4 @@
-import DetectView from '@/views/DetectView.vue'
+import PredictView from '@/views/PredictView.vue'
 import TrainView from '@/views/TrainView.vue'
 import Home from '@/views/Home.vue'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -13,8 +13,8 @@ const router = createRouter({
       component: Home
     },
     {
-      path: '/detect',
-      component: DetectView
+      path: '/predict',
+      component: PredictView
     },
     {
       path: '/train',
