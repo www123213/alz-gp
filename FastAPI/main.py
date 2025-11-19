@@ -5,6 +5,7 @@ from history_router import router as history_router
 from database import init_db
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from auth_router import router as auth_router
 import os
 
 app = FastAPI()
@@ -20,6 +21,7 @@ app.add_middleware(
 app.include_router(predict_router)
 app.include_router(train_router)
 app.include_router(history_router)
+app.include_router(auth_router)
 
 # 在 app 定义之后，挂载 uploads 目录作为静态文件
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")

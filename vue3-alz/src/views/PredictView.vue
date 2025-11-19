@@ -123,9 +123,6 @@ const onPredict = async () => {
 
     const res = await axios.post('http://localhost:8000/predict', formData)
 
-    // 打印完整响应方便调试（浏览器控制台）
-    console.log('predict response:', res.data)
-
     // 统一归一化后端返回格式，确保前端始终能读取下面这些字段
     const normalize = (data) => {
       const out = {
@@ -206,7 +203,6 @@ const clearAll = () => {
   clearImage()
   clearModel()
   clearPatientInfo()
-  result.value = null // 可选：清空历史检测结果
 }
 </script>
 
@@ -250,7 +246,9 @@ const clearAll = () => {
             <div class="selected-img-container">
               <img :src="previewUrl" alt="已选MRI图像" class="selected-img">
             </div>
-            <p>已选择文件: {{ selectedFile.name }}</p>
+            <p style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+              已选择文件: {{ selectedFile.name }}
+            </p>
           </div>
           <div class="model-btn-group">
             <ElButton @click="clearImage" type="success">清除图片</ElButton>
@@ -329,7 +327,7 @@ const clearAll = () => {
       <hr>
 
       <div class="important-note">
-        <h3 style="font-weight: bold;">⚠️ 重要提示：</h3>
+        <h3>⚠️ 重要提示：</h3>
         <p>本YOLOv8检测系统仅供辅助参考，不能替代专业医疗诊断。<br>
           如有疑虑，请及时就医并咨询专业医师。</p>
       </div>
@@ -602,7 +600,7 @@ p{
 
 hr {
   border: none;
-  border-top: 1px dashed #515151;
+  border-top: 2px dashed #515151;
   margin: 12px 0;
 }
 
@@ -610,6 +608,9 @@ hr {
   margin-top: auto;
 }
 
+h3{
+  font-weight: bold;
+}
 @media screen and (max-width: 1640px) {
   h2 {
     font-size: 20px;

@@ -7,7 +7,7 @@ import time
 import signal
 
 router = APIRouter()
-DATASETS_ROOT = os.environ.get('DATASETS_ROOT', r'D:\毕设')
+DATASETS_ROOT = os.environ.get('DATASETS_ROOT', r'D:\GraduationProject')
 
 @router.post("/train")
 async def train(

@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Depends, Form
 from fastapi.responses import JSONResponse 
 from sqlmodel import Session
 from database import get_session
-from history_models import DetectionRecord
+from history_models import PredictionRecord
 from ultralytics import YOLO
 from PIL import Image
 import numpy as np
@@ -12,7 +12,7 @@ import tempfile
 import time
 import uuid
 
-router = APIRouter(tags=["prediction"])
+router = APIRouter(tags=["Prediction"])
 
 @router.post("/predict")
 async def predict(
@@ -123,7 +123,7 @@ async def predict(
     else:
         return JSONResponse({"error": "模型无有效输出（请确认是分类或检测模型）"}, status_code=500)
 
-    # 提取“主要结果”（置信度最高的类别）
+    # 提取置信度最高的类别
     if all_results_list:
         main_result = max(all_results_list, key=lambda x: x["confidence"])
         main_class = main_result["class"]
@@ -131,9 +131,9 @@ async def predict(
     else:
         return JSONResponse({"error": "未检测到任何类别结果"}, status_code=500)
 
-    # 数据库存储 + 返回结果（逻辑不变，仅确保变量存在）
+    # 数据库存储 + 返回结果
     try:
-        rec = DetectionRecord(
+        rec = PredictionRecord(
             patient_name=patient_name,
             patient_gender=patient_gender,
             patient_age=patient_age,

@@ -4,6 +4,7 @@ import Home from '@/views/Home.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
 import HistoryView from '@/views/HistoryView.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,4 +32,16 @@ const router = createRouter({
   ]
 })
 
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  const publicPages = ['/', '/login']  // 无需登录就能访问的路由
+  const authRequired = !publicPages.includes(to.path)
+  const auth = useAuthStore()
+  if (authRequired && !auth.isLoggedIn) {
+    alert('请先登录')
+    next('/login')
+  } else {
+    next()
+  }
+})
 export default router

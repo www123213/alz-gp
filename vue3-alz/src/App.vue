@@ -1,21 +1,28 @@
 <script setup>
-import { KeepAlive } from 'vue';
-import { RouterView } from 'vue-router'
+import { KeepAlive } from 'vue'
+import { RouterView, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
+const router = useRouter()
+
+const onLogout = () => {
+  auth.logout()
+  router.push('/login')
+  alert('用户已注销')
+}
 </script>
 
 <template>
     <nav class="sidenav">
      <div class="sidenav-title">阿尔茨海默诊断系统</div>
-      <ul>
+
+     <div class="nav-wrapper">
+      <ul class="main-nav">
         <li>
-          <RouterLink to="/login" active-class="nav-active" :class="{ 'nav-link': true }">
-            请先登录
+          <RouterLink to="/" exact-active-class="nav-active" :class="{ 'nav-link': true }">
+            首页
           </RouterLink>
-        </li>
-        <li>
-            <RouterLink to="/" exact-active-class="nav-active" :class="{ 'nav-link': true }">
-              首页
-            </RouterLink>
         </li>
         
         <li>
@@ -34,6 +41,23 @@ import { RouterView } from 'vue-router'
             </RouterLink>
         </li>
       </ul>
+     </div>
+
+     <ul class="auth-nav">
+        <li>
+          <RouterLink to="/login" active-class="nav-active" :class="{ 'nav-link': true }">
+            {{ auth.username ? auth.username : '请先登录' }}
+          </RouterLink>
+        </li>
+
+        <li>
+          <a @click="onLogout" :class="{ 'nav-link': true }">
+            注销
+          </a>
+        </li>
+     </ul>
+
+
     </nav>
     
     <div class="main-content">
@@ -55,6 +79,7 @@ import { RouterView } from 'vue-router'
  body {
     margin: 0 auto;
     max-width: 1800px;
+    background: #E4E9F7;
  }
 
  @media screen and (max-width: 960px) { 
@@ -73,18 +98,27 @@ import { RouterView } from 'vue-router'
 .sidenav {
   width: 250px;
   height: 100vh;
-  padding: 0;
+  padding: 0 10px;
   left: 0;
   top: 0;
   position: fixed;
   display: flex;
-  background: #2d3a4b;
+  flex-direction: column;
+  background: #F6F5FF;
   color: #fff;
   flex-direction: column;
   align-items: center;
+  padding-bottom: 40px;
+}
+.nav-wrapper{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
 }
 .sidenav-title {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: bold;
   letter-spacing: 2px;
   height: 60px;
@@ -92,6 +126,11 @@ import { RouterView } from 'vue-router'
   display: flex;
   justify-content: center;
   width: 100%;
+  color: #695CFE;
+  background: #d4cbff;
+  border-radius: 8px;
+  margin-top: 18px;
+  padding: 5px;
 }
 .sidenav ul {
   list-style: none;
@@ -104,25 +143,29 @@ import { RouterView } from 'vue-router'
   text-align: center;
   font-size: 20px;
   cursor: pointer;
-  transition: background 0.2s;
-  color: #06d6a0;
+  transition: all 0.5s;
+  color: #707070;
   position: relative;
+  font-size: 18px;
 }
 .sidenav li a {
   display: block;
   width: 100%;
   height: 100%;
-  padding: 20px 0;
+  margin: 20px 0;
+  padding: 10px;
   color: inherit;
   text-decoration: none;
+  font-weight: 500;
+  border-radius: 8px;
 }
 .nav-link:hover {
-  background: #3498db;
-  color: #ffffff;
+  background: #695CFE;
+  color: #DDD;
 }
 .nav-active {
-  background: #3498db;
-  color: #ffffff !important;
+  background: #695CFE;
+  color: #DDD !important;
 }
 
 .footer {

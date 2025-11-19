@@ -79,14 +79,14 @@
   object-fit: cover;
   height: auto;
   width: 440px;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .content-card{
     background-color: #e6f7ff;
     padding: 24px;
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     flex: 1;
 }

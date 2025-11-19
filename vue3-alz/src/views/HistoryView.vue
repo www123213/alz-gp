@@ -51,7 +51,7 @@ const fetchList = async () => {
     if (filterForm.value.name) params.patient_name = filterForm.value.name
     if (filterForm.value.medicalId) params.medical_id = filterForm.value.medicalId
 
-    const r = await axios.get('http://localhost:8000/detections/', { params })
+    const r = await axios.get('http://localhost:8000/Predictions/', { params })
       list.value = r.data
     } catch (e) {
         ElNotification.error('获取列表失败')
@@ -89,7 +89,7 @@ const saveEdit = async () => {
       label: editItem.value.label,
       confidence: editItem.value.confidence
     };
-    await axios.put(`http://localhost:8000/detections/${id}`, payload);
+    await axios.put(`http://localhost:8000/Predictions/${id}`, payload);
     ElNotification.success('保存成功');
     editing.value = false;
     fetchList();
@@ -121,7 +121,7 @@ const remove = async (id) => {
   }
 
   try {
-    await axios.delete(`http://localhost:8000/detections/${id}`)
+    await axios.delete(`http://localhost:8000/Predictions/${id}`)
     ElNotification.success('删除成功')
     await fetchList()
   } catch (e) {
@@ -173,26 +173,26 @@ onMounted(() => {
     <div class="history">
     <h2>检测历史</h2>
       <div class="filter-bar">
-        <ElInput class="input-info" v-model="filterForm.name" placeholder="请输入姓名"/>
+        <ElInput class="input-info" v-model="filterForm.name" placeholder="请输入姓名" />
         <ElInput class="input-info" v-model="filterForm.medicalId" placeholder="请输入完整病历号"/>
-        <ElButton type="primary" @click="handleFilter">筛选</ElButton>
-        <ElButton type="primary" @click="fetchList">刷新</ElButton>
+        <ElButton type="primary" @click="handleFilter" style="border-radius: 10px;">筛选</ElButton>
+        <ElButton type="primary" @click="fetchList" style="border-radius: 10px;">刷新</ElButton>
       </div>
 
       <ElTable 
         :data="list" 
-        style="width: 100%; margin-top: 20px; font-size: 16px;"
+        style="width: 100%; margin-top: 20px; font-size: 16px; border-radius: 12px;"
         :row-class-name="tableRowClassName"
         :row-style="(row) => (row && row.id === highlightId ? { backgroundColor: '#fffbcc' } : {})"
       >
         
         <ElTableColumn label="序号" width="80" :formatter="(row, column, cellValue, index) => index + 1" />
         
-        <ElTableColumn prop="patient_name" label="姓名" width="80" />
+        <ElTableColumn prop="patient_name" label="姓名" width="120" />
         <ElTableColumn prop="medical_id" label="病历号" width="100"/>
-        <ElTableColumn prop="patient_gender" label="性别" width="80" />
-        <ElTableColumn prop="patient_age" label="年龄" width="80" />
-        <ElTableColumn label="检测时间" :formatter="(row) => formatDate(row?.created_at)" />
+        <ElTableColumn prop="patient_gender" label="性别" width="100" />
+        <ElTableColumn prop="patient_age" label="年龄" width="100" />
+        <ElTableColumn label="检测时间" :formatter="(row) => formatDate(row?.created_at)"/>
         <ElTableColumn label="检测结果" :formatter="(row) => classNamesZh[row?.label] || row?.label" />
         <ElTableColumn 
             prop="confidence" 
@@ -279,7 +279,7 @@ onMounted(() => {
     padding: 40px;
 }
 .filter-bar{
-    padding: 20px;
+    margin: 20px 0;
 }
 .input-info{
     width: 200px;

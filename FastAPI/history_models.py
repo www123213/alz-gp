@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from sqlmodel import SQLModel, Field, Column, JSON, Text
 
 # 存储检测历史表
-class DetectionRecord(SQLModel, table=True):
+class PredictionRecord(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     # 表单信息
@@ -35,7 +35,7 @@ class DetectionRecord(SQLModel, table=True):
 
 
 # DTO（创建 / 更新）
-class DetectionCreate(SQLModel):
+class PredictionCreate(SQLModel):
     patient_name: Optional[str] = None
     patient_gender: Optional[str] = None
     patient_age: Optional[int] = None
@@ -47,7 +47,7 @@ class DetectionCreate(SQLModel):
     image_path: Optional[str] = None
 
 
-class DetectionUpdate(SQLModel):
+class PredictionUpdate(SQLModel):
     patient_name: Optional[str] = None
     patient_gender: Optional[str] = None
     patient_age: Optional[int] = None
