@@ -154,7 +154,7 @@ const onStopTrain = async () => {
         <label>批次大小：</label>
         <div class="input-with-info">
           <ElInputNumber v-model="batchSize" :min="1" :step="1" placeholder="批次大小" />
-          <ElTooltip content="每次迭代训练的图片数量，受GPU显存限制。RTX 3060建议8-16之间，值越大训练越快但消耗显存越多">
+          <ElTooltip content="每次迭代训练的图片数量，受GPU显存限制，值越大训练越快但消耗显存越多">
             <InfoFilled class="info-icon" />
           </ElTooltip>
         </div>
@@ -174,11 +174,11 @@ const onStopTrain = async () => {
         <label>模型类型：</label>
         <div class="input-with-info">
           <ElSelect v-model="modelType" placeholder="选择模型类型" size="medium">
-            <ElOption value="n" label="nano(最小最快)" />
-            <ElOption value="s" label="small(推荐)" />
+            <ElOption value="n" label="nano" />
+            <ElOption value="s" label="small" />
             <ElOption value="m" label="medium" />
             <ElOption value="l" label="large"/>
-            <ElOption value="x" label="xlarge(最准最大)"/>
+            <ElOption value="x" label="xlarge"/>
           </ElSelect>
           <ElTooltip content="模型越大精度可能越高，但训练和推理速度越慢">
             <InfoFilled class="info-icon" />
@@ -187,11 +187,10 @@ const onStopTrain = async () => {
       </div>
 
       <div class="form-item">
-        <ElCheckbox v-model="backupConfirmed">
-          <span>
-            执行训练集完全去重（会永久删除完全重复的图像文件，建议先备份原始数据）
-          </span>
-        </ElCheckbox>
+        <div class="checkbox">
+          <ElCheckbox v-model="backupConfirmed" label="执行训练集哈希去重" />
+          <div class="tip-text">（建议先备份原始数据）</div>
+        </div>
       </div>
 
       <div class="train-btn-container">
@@ -258,19 +257,23 @@ const onStopTrain = async () => {
   align-items: center;
   margin-bottom: 16px;
   width: 100%;
+  justify-content: center;
 }
 .form-item label{
   margin-right: 12px;
   min-width: 100px;
   font-weight: 500;
 }
-.form-item span{
-  color: #ff4d4f; 
-  font-weight: 500;
-  max-width: 250px;
-  display: block;
-  white-space: normal;
-  margin-top: 10px;
+.checkbox{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.tip-text{
+  font-size: 12px;
+  color: #909399;
+  margin-top: -4px;
+  margin-left: 20px;
 }
 .input-with-info{
   display: flex;
