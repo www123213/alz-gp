@@ -26,4 +26,6 @@ pandas 数据分析
 torch PyTorch深度学习框架
 torchvision 图像预处理
 python-multipart FastAPI处理文件上传
+hashlib 哈希去重
+albumentations 数据增强
 ```
