@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onUnmounted, nextTick } from 'vue'
-import axios from 'axios'
+import { getTrainLog, startTrain, stopTrain } from '@/api/train'
 import { ElButton, ElCard, ElCheckbox, ElDivider, ElInputNumber, ElMessage, ElOption, ElSelect, ElTooltip } from 'element-plus'
 import { FolderOpened, InfoFilled } from '@element-plus/icons-vue'
 
@@ -37,7 +37,7 @@ const onDatasetFolderChange = (e) => {
 
 const fetchTrainLog = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/train/log')
+    const res = await getTrainLog()
     trainLog.value = res.data.log
     //滚动到最新
     nextTick(() => {
@@ -88,7 +88,8 @@ const onTrain = async () => {
     formData.append('model_type', modelType.value)
     formData.append('backup_confirmed', backupConfirmed.value)
 
-    const res = await axios.post('http://localhost:8000/train', formData)
+    const res = await startTrain(formData)
+
     trainStatus.value = res.data.status
     currentPid.value = res.data.pid || null
     isRunning.value = true
@@ -105,7 +106,7 @@ const onTrain = async () => {
 
 const onStopTrain = async () => {
   try {
-    const res = await axios.post('http://localhost:8000/train/stop')
+    const res = await stopTrain()
     if (res.data.status === 'stopped') {
       trainStatus.value = '训练已停止'
       ElMessage.success('训练已停止')

@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 
 const username = ref('')
@@ -17,7 +16,7 @@ const onLogin = async () => {
     }
     loading.value = true
     try {
-        const res = await axios.post('http://localhost:8000/login', {
+        const res = await login ({
             username: username.value,
             password: password.value
         })
@@ -28,8 +27,7 @@ const onLogin = async () => {
             alert('登陆失败')
         }
     } catch (err) {
-        const msg = err.response?.data?.detail || err.message || '登录请求错误'
-        alert('登录失败: ' + msg)
+        console.error(err)
     } finally {
         loading.value = false
     }

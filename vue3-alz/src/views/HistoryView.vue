@@ -2,7 +2,7 @@
 import { ElButton, ElInput, ElNotification, ElTable, ElTableColumn, ElMessageBox, ElDialog, ElForm, ElFormItem, ElInputNumber } from 'element-plus';
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import { getPredictions, updatePrediction, deletePrediction } from '@/api/history';
 
 //数据状态
 const list = ref([])
@@ -52,7 +52,7 @@ const fetchList = async () => {
     if (filterForm.value.name) params.patient_name = filterForm.value.name
     if (filterForm.value.medicalId) params.medical_id = filterForm.value.medicalId
 
-    const r = await axios.get('http://localhost:8000/Predictions/', { params })
+    const r = await getPredictions(params)
       list.value = r.data
     } catch (e) {
         ElNotification.error('获取列表失败')
@@ -90,7 +90,7 @@ const saveEdit = async () => {
       label: editItem.value.label,
       confidence: editItem.value.confidence
     };
-    await axios.put(`http://localhost:8000/Predictions/${id}`, payload);
+    await updatePrediction(id, payload);
     ElNotification.success('保存成功');
     editing.value = false;
     fetchList();
@@ -122,7 +122,7 @@ const remove = async (id) => {
   }
 
   try {
-    await axios.delete(`http://localhost:8000/Predictions/${id}`)
+    await deletePrediction(id)
     ElNotification.success('删除成功')
     await fetchList()
   } catch (e) {

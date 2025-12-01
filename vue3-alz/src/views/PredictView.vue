@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import axios from 'axios'
+import { predict } from '@/api/predict'
 import { ElButton, ElForm, ElFormItem, ElInput, ElOption, ElSelect, ElMessage } from 'element-plus'
 
 const fileInputRef = ref(null)
@@ -121,7 +121,7 @@ const onPredict = async () => {
     formData.append('patient_age', patientForm.value.patient_age)
     formData.append('medical_id', patientForm.value.medical_id)
 
-    const res = await axios.post('http://localhost:8000/predict', formData)
+    const res = await predict(formData)
 
     // 统一归一化后端返回格式，确保前端始终能读取下面这些字段
     const normalize = (data) => {
@@ -159,7 +159,7 @@ const onPredict = async () => {
       result.value = null
     }
   } catch (err) {
-    // 细粒度错误处理
+    // 错误处理
     if (!err.response) {
       error.value = '网络异常，请检查后端服务是否正常'
       ElMessage.error(error.value)
