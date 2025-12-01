@@ -139,6 +139,8 @@ async def predict(
             patient_age=patient_age,
             medical_id=medical_id,
             label=main_class,
+            #保存模型文件名
+            model_name=model_file.filename,
             confidence=main_confidence,
             all_results=all_results_list,
             bboxes=bboxes_list,  # 分类任务自动为[]，检测任务为边界框列表

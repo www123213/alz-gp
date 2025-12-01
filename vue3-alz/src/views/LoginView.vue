@@ -23,7 +23,7 @@ const onLogin = async () => {
         })
         if (res.data && res.data.success) {
             auth.setAuth(res.data.token, username.value)
-            router.push('/predict')
+            router.replace('/predict')
         } else {
             alert('登陆失败')
         }

@@ -15,6 +15,10 @@ class PredictionRecord(SQLModel, table=True):
 
     # 推理结果
     label: Optional[str] = Field(default=None, index=True)
+
+    #新增绑定模型名称字段
+    model_name: Optional[str] = Field(default=None)
+    
     confidence: Optional[float] = Field(default=None)
 
     all_results: Optional[List[dict]] = Field(

@@ -64,7 +64,7 @@ const fetchTrainLog = async () => {
 
 const startLogPolling = () => {
   if(logTimer) clearInterval(logTimer)
-  logTimer = setInterval(fetchTrainLog, 2000)
+  logTimer = setInterval(fetchTrainLog, 5000)
 }
 
 const stopLogPolling = () => {
@@ -194,14 +194,23 @@ const onStopTrain = async () => {
       </div>
 
       <div class="train-btn-container">
-        <ElButton type="primary" 
-        @click="onTrain" 
-        :disabled="trainLoading || !datasetFolderName" 
-        :loading="trainLoading" 
-        size="large">
+        <ElButton 
+          type="primary" 
+          @click="onTrain" 
+          :disabled="trainLoading || !datasetFolderName" 
+          :loading="trainLoading" 
+          size="large"
+        >
           开始训练
         </ElButton>
-        <ElButton type="danger" @click="onStopTrain" :disabled="!isRunning" size="large">停止训练</ElButton>
+        <ElButton 
+          type="danger" 
+          @click="onStopTrain" 
+          :disabled="!isRunning" 
+          size="large"
+        >
+          停止训练
+        </ElButton>
       </div>
     </div>
     </ElCard>

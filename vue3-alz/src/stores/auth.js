@@ -1,41 +1,41 @@
 import { defineStore } from 'pinia'
+import { computed, ref, watch } from 'vue'
 import axios from 'axios'
 
-export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    token: '',      
-    username: ''    
-  }),
-  getters: {
-    isLoggedIn: (state) => !!state.token
-  },
-  actions: {
-    setAuth(token, username) {
-      this.token = token || ''
-      this.username = username || ''
-      
-      localStorage.setItem('auth_token', this.token)
-      localStorage.setItem('auth_username', this.username)
-      // 把 token 注入 axios header 便于后端校验
-      if (this.token) axios.defaults.headers.common['x-token'] = this.token
-      else delete axios.defaults.headers.common['x-token']
-    },
-    logout() {
-      this.token = ''
-      this.username = ''
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('auth_username')
-      delete axios.defaults.headers.common['x-token']
-    },
-    initFromStorage() {
-      // 页面加载时从 localStorage 恢复
-      const t = localStorage.getItem('auth_token')
-      const u = localStorage.getItem('auth_username')
-      if (t) {
-        this.token = t
-        this.username = u || ''
-        axios.defaults.headers.common['x-token'] = t
-      }
-    }
+export const useAuthStore = defineStore('auth', () => {
+  // 1.定义状态(state) 初始化时尝试从localStorage读取
+  const token = ref(localStorage.getItem('auth_token') || '')
+  const username = ref(localStorage.getItem('auth_username') || '')
+
+  // 2.定义动作(actions)
+  const isLoggedIn = computed(() => !!token.value)
+
+  const setAuth = (newToken, newUsername) => {
+    token.value = newToken
+    username.value = newUsername
   }
+
+  const logout = () => {
+    token.value = ''
+    username.value = ''
+  }
+
+  // 3.使用watch自动处理副作用
+  // 只要token发生变化（无论是登录、注销还是初始化），都会自动执行
+  watch(token, (newToken) => {
+    if (newToken) {
+      localStorage.setItem('auth_token', newToken)
+      axios.defaults.headers.common['x-token'] = newToken
+    } else {
+      localStorage.removeItem('auth_token')
+      delete axios.defaults.headers.common['x-token']
+    }
+  }, { immediate: true })  // immediate: true 保证刷新页面时也会立即执行一次
+
+  watch(username, (newName) => {
+    if (newName) localStorage.setItem('auth_username', newName)
+    else localStorage.removeItem('auth_username')
+  }, { immediate: true })
+
+  return { token, username, isLoggedIn, setAuth, logout }
 })

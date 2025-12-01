@@ -10,6 +10,7 @@ const editing = ref(false)
 const editItem = ref({})
 const viewingImage = ref(false)
 const imagePreviewUrl = ref('')
+const imagePath = ref('')
 const highlightId = ref(null)
 const filterForm = ref({
   name: '',
@@ -139,6 +140,7 @@ const viewImage = (item) => {
   imagePreviewUrl.value = item.image_path.startsWith('http') 
     ? item.image_path 
     : `http://localhost:8000/${item.image_path}`
+  imagePath.value = item.image_path
   viewingImage.value = true
 }
 
@@ -194,6 +196,7 @@ onMounted(() => {
         <ElTableColumn prop="patient_age" label="年龄" width="100" />
         <ElTableColumn label="检测时间" :formatter="(row) => formatDate(row?.created_at)"/>
         <ElTableColumn label="检测结果" :formatter="(row) => classNamesZh[row?.label] || row?.label" />
+        <ElTableColumn prop="model_name" label="使用模型" width="140" />
         <ElTableColumn 
             prop="confidence" 
             label="置信度" 
@@ -265,6 +268,7 @@ onMounted(() => {
         :before-close="closeImage"
         width="800px">
             <div style="text-align: center;">
+                <div>文件路径：{{ imagePath }}</div>
                 <img 
                 :src="imagePreviewUrl" 
                 style="max-width: 100%; max-height: 600px;" 
