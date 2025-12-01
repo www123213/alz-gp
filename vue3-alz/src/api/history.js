@@ -1,7 +1,7 @@
 import httpRequest from "@/utils/request";
 
 export function getPredictions(params) {
-    return httpRequest.get('/predictions', { params })
+    return httpRequest.get('/Predictions', { params })
 }
 
 export function updatePrediction(id, data) {
