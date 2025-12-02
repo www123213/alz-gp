@@ -1,3 +1,4 @@
 # 忽略结果文件和读取文件
 results/
 uploads/
+train.log
