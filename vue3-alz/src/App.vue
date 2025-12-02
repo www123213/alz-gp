@@ -27,7 +27,7 @@ const onLogout = () => {
         
         <li>
             <RouterLink to="/predict" active-class="nav-active" :class="{ 'nav-link': true }">
-              目标检测
+              目标推理
             </RouterLink>
         </li>
         <li>
