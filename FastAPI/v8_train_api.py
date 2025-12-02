@@ -55,7 +55,7 @@ async def train(
     # 打开日志文件供子进程写入
     f = open("train.log", "a", encoding="utf-8", buffering=1)
     try:
-        f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] TRAIN_STARTED\n")
+        f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 训练开始\n")
         f.flush()
     except Exception:
         pass
@@ -72,9 +72,15 @@ async def train(
     # 后台等待线程：等待进程完成并写入 TRAIN_FINISHED（使用 background_tasks 来等待）
     def waiter(p, log_file_path="train.log"):
         p.wait()
+        return_code = p.returncode
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
         try:
             with open(log_file_path, "a", encoding="utf-8") as lf:
-                lf.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] TRAIN_FINISHED\n")
+                if return_code == 0:
+                    lf.write(f"[{timestamp}] 训练结束\n")
+                else:
+                    lf.write(f"\n[{timestamp}] 训练异常 (Exit Code: {return_code})\n")
+                    lf.write(f"提示: 如果退出码很大(如3221225477)，通常是显存溢出(OOM)。\n")
                 lf.flush()
         except Exception:
             pass
@@ -118,7 +124,7 @@ async def stop_train():
         # 写入 TRAIN_STOPPED 到日志，说明是被外部终止
         try:
             with open("train.log", "a", encoding="utf-8") as lf:
-                lf.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] TRAIN_STOPPED (pid={pid})\n")
+                lf.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 训练终止 (pid={pid})\n")
                 lf.flush()
         except Exception:
             pass
