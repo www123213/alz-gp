@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onUnmounted, nextTick } from 'vue'
-import { getTrainLog, startTrain, stopTrain } from '@/api/train'
+import { getTrainLog, startTrain, stopTrain } from '@/apis/train'
 import { ElButton, ElCard, ElCheckbox, ElDivider, ElInputNumber, ElMessage, ElOption, ElSelect, ElTooltip } from 'element-plus'
 import { FolderOpened, InfoFilled } from '@element-plus/icons-vue'
 
@@ -64,7 +64,7 @@ const fetchTrainLog = async () => {
 
 const startLogPolling = () => {
   if(logTimer) clearInterval(logTimer)
-  logTimer = setInterval(fetchTrainLog, 5000)
+  logTimer = setInterval(fetchTrainLog, 3000)
 }
 
 const stopLogPolling = () => {

@@ -1,5 +1,5 @@
 import httpRequest from "@/utils/request";
 
-export function predict(formData) {
+export const predict = (formData) => {
     return httpRequest.post('/predict', formData)
 }

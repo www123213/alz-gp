@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { predict } from '@/api/predict'
+import { predict } from '@/apis/predict'
 import { ElButton, ElForm, ElFormItem, ElInput, ElOption, ElSelect, ElMessage } from 'element-plus'
 
 const fileInputRef = ref(null)
@@ -40,10 +40,8 @@ const rules = ref({
 
 // 中文映射
 const classNamesZh = {
-  'Mild Impairment': '轻度认知障碍',
-  'Moderate Impairment': '中度认知障碍', 
-  'No Impairment': '无认知障碍',
-  'Very Mild Impairment': '极轻度认知障碍'
+  'Mild Impairment': '轻度认知障碍', 'Moderate Impairment': '中度认知障碍', 
+  'No Impairment': '无认知障碍', 'Very Mild Impairment': '极轻度认知障碍'
 }
 
 // 打开文件选择器

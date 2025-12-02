@@ -1,8 +1,8 @@
 <script setup>
 import { ElButton, ElInput, ElNotification, ElTable, ElTableColumn, ElMessageBox, ElDialog, ElForm, ElFormItem, ElInputNumber } from 'element-plus';
 import { ref, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { getPredictions, updatePrediction, deletePrediction } from '@/api/history';
+import { useRoute } from 'vue-router';
+import { getPredictions, updatePrediction, deletePrediction } from '@/apis/history';
 
 //数据状态
 const list = ref([])
@@ -18,7 +18,6 @@ const filterForm = ref({
 })
 
 const route = useRoute()
-const router = useRouter()
 
 // 中文映射
 const classNamesZh = {
