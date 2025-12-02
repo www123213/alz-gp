@@ -19,6 +19,7 @@ const isRunning = ref(false)
 const logContainer = ref(null)
 const autoScroll = ref(true)
 const backupConfirmed = ref(false)
+const errorCount = ref(0)
 
 // 处理文件夹选项
 const onDatasetFolderChange = (e) => {
@@ -38,6 +39,7 @@ const onDatasetFolderChange = (e) => {
 const fetchTrainLog = async () => {
   try {
     const res = await getTrainLog()
+    errorCount.value = 0
     trainLog.value = res.data.log
     //滚动到最新
     nextTick(() => {
@@ -47,11 +49,17 @@ const fetchTrainLog = async () => {
     })
 
       // 检测 TRAIN_FINISHED / TRAIN_STOPPED 并停止轮询
-    if (trainLog.value && trainLog.value.includes('TRAIN_FINISHED')) {
+    if (trainLog.value && (trainLog.value.includes('TRAIN_FINISHED') || trainLog.value.includes('TRAIN_ERROR'))) {
       stopLogPolling()
       isRunning.value = false
-      trainStatus.value = '训练已完成'
-      ElMessage.success('训练完成')
+      if (trainLog.value.includes('TRAIN_ERROR')) {
+        trainStatus.value = '训练异常终止'
+        ElMessage.error('训练出错')
+      } else {
+        trainStatus.value = '训练已完成'
+        ElMessage.success('训练完成')
+      }
+      
     }
     if (trainLog.value && trainLog.value.includes('TRAIN_STOPPED')) {
       stopLogPolling()
@@ -59,7 +67,16 @@ const fetchTrainLog = async () => {
       trainStatus.value = '训练已停止'
       ElMessage.info('训练被终止')
     }
-  } catch {}
+  } catch (err) {
+    errorCount.value++
+    console.log(`日志获取失败：${errorCount.value}次`)
+  }
+  if (errorCount.value > 5) {
+    stopLogPolling()
+    isRunning.value = false
+    trainStatus.value = '连接丢失：系统可能因显存不足卡死'
+    ElMessage.error('无法连接服务器，已停止监控进度')
+  }
 }
 
 const startLogPolling = () => {
@@ -79,6 +96,7 @@ const onTrain = async () => {
   trainLoading.value = true
   trainStatus.value = ''
   trainLog.value = ''
+  errorCount.value = 0
   try {
     const formData = new FormData()
     formData.append('dataset_path', datasetPath.value)
