@@ -93,6 +93,7 @@ const onLogout = () => {
     padding: 20px;
     min-height: 100vh;
     box-sizing: border-box;
+    padding-bottom: 60px;
 }
 
 .sidenav {

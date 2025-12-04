@@ -556,6 +556,13 @@ h3{
     margin: 5px;
     padding: 0 0 5px;
   }
+  .card-content{
+    gap: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-height: none;
+  }
   .result-card{
     max-height: 600px;
     max-width: 500px;
