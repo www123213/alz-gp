@@ -163,7 +163,7 @@ def rename_and_cleanup_models(results_save_dir, final_accuracy):
     
     accuracy_str = f"{final_accuracy:.2f}%".replace('.', '_')
     best_pt = os.path.join(weights_dir, 'best.pt')
-    new_best_name = f"best-{accuracy_str}.pt"
+    new_best_name = f"acc-top1-{accuracy_str}.pt"
     
     if os.path.exists(best_pt):
         try:

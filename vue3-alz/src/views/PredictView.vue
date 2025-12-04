@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { predict } from '@/apis/predict'
 import { ElButton, ElForm, ElFormItem, ElInput, ElOption, ElSelect, ElMessage } from 'element-plus'
 
@@ -12,6 +12,22 @@ const result = ref(null)
 const error = ref('')
 const loading = ref(false)
 const formRef = ref(null)
+
+// 初始化加载默认推理模型
+onMounted(async () => {
+  // 在public目录下读取默认模型，名为acc-top1-99.18%.pt
+  const defaultModelName = 'acc-top1-99.18%.pt'
+  try {
+    const response = await fetch(`/${defaultModelName}`)
+    if (response.ok) {
+      const blob = await response.blob()
+      const file = new File([blob], defaultModelName, { type: 'application/octet-stream' })
+      selectedModel.value = file
+    }
+  } catch (e) {
+    console.warn('自动加载默认模型失败，请手动选择', e)
+  }
+})
 
 // 病人信息表单（统一字段名为 patient_ 前缀）
 const patientForm = ref({
@@ -75,16 +91,21 @@ const validatePatientForm = async () => {
 
 // 图片选择事件
 const onFileChange = (e) => {
+  // 选择图片点击取消时
+  if (e.target.files.length === 0) return
+
   const file = e.target.files[0]
   selectedFile.value = file
   result.value = null
   error.value = ''
   if (file) previewUrl.value = URL.createObjectURL(file)
-  else previewUrl.value = ''
 }
 
 // 模型选择事件
 const onModelChange = (e) => {
+  // 选择模型点击取消时
+  if (e.target.files.length === 0) return
+
   const file = e.target.files[0]
   selectedModel.value = file
   error.value = ''
@@ -170,21 +191,6 @@ const onPredict = async () => {
   }
 }
 
-// 清空图片
-const clearImage = () => {
-  selectedFile.value = null
-  previewUrl.value = ''
-  error.value = ''
-  fileInputRef.value && (fileInputRef.value.value = '')
-}
-
-// 清空模型
-const clearModel = () => {
-  selectedModel.value = null
-  error.value = ''
-  modelInputRef.value && (modelInputRef.value.value = '')
-}
-
 // 清空病人信息
 const clearPatientInfo = () => {
   patientForm.value = {
@@ -198,10 +204,22 @@ const clearPatientInfo = () => {
 
 // 清空选择
 const clearAll = () => {
-  clearImage()
-  clearModel()
-  clearPatientInfo()
+  selectedFile.value = null
+  previewUrl.value = ''
+  selectedModel.value = null
+  error.value = ''
+  if (fileInputRef.value) fileInputRef.value.value = ''
+  if (modelInputRef.value) modelInputRef.value.value = ''
+
+  patientForm.value = {
+    patient_name: '',
+    patient_gender: '',
+    patient_age: '',
+    medical_id: ''
+  }
+  formRef.value?.resetFields()
 }
+
 </script>
 
 <template>
@@ -232,7 +250,7 @@ const clearAll = () => {
           <ElFormItem>
             <ElButton type="warning" @click="clearPatientInfo">清空信息</ElButton>
           </ElFormItem>
-      </ElForm>
+        </ElForm>
         </div>
 
         <!-- 载入图片 -->
@@ -240,34 +258,31 @@ const clearAll = () => {
           <div v-if="!selectedFile" class="file-placeholder" @click="openFileSelector">
             请选择要检测的MRI图像
           </div>
-          <div v-else class="file-selected">
+          <div v-else class="file-selected" @click="openFileSelector" title="点击更换图片" style="cursor: pointer;">
             <div class="selected-img-container">
               <img :src="previewUrl" alt="已选MRI图像" class="selected-img">
             </div>
-            <p style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
-              已选择文件: {{ selectedFile.name }}
-            </p>
-          </div>
-          <div class="model-btn-group">
-            <ElButton @click="clearImage" type="success">清除图片</ElButton>
+            <p>已选择文件: {{ selectedFile.name }}</p>
           </div>
         </div>
       </div>
 
       <div class="model-and-btn">
-        <p v-if="selectedModel" class="model-name">已选模型: {{ selectedModel.name }}</p>
-        <p v-else class="model-hint">请选择模型文件(分类/检测)</p>
+        <p v-if="selectedModel" class="model-name">当前模型: {{ selectedModel.name }}</p>
+        <p v-else class="model-hint">未加载模型</p>
+
         <div class="btn-group">
           <ElButton 
             type="primary"
             @click="onPredict" 
             :disabled="loading || !selectedFile || !selectedModel" 
-            class="predict-btn">
+            >
             开始检测
             </ElButton>
-            <ElButton type="default" @click="openModelSelector">选择模型</ElButton>
-            <ElButton type="default" @click="clearModel">清除模型</ElButton>
-            <ElButton type="danger" @click="clearAll">清除选择</ElButton>
+            <ElButton type="default" @click="openModelSelector">
+              {{ selectedModel ? '更换模型' : '选择模型' }}
+            </ElButton>
+            <ElButton type="danger" @click="clearAll">清除全部</ElButton>
         </div>
       </div>
     
@@ -356,7 +371,7 @@ const clearAll = () => {
 .predict-card {
   background: #f8f9fa;
   border-radius: 12px;
-  box-shadow: 0 4px 16px #aeaeae;
+  box-shadow: 0 6px 18px #aeaeae;
   padding: 16px;
   flex: 0 0 auto;
 }
@@ -365,17 +380,23 @@ const clearAll = () => {
 }
 
 .card-content{
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start; 
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start; 
+  gap: 10px ;
 }
 
-.patient-form-section, .upload-section {
+.patient-form-section{
   display: flex;
   flex-direction: column;
-  flex: 1; 
-  align-items: center;
+}
+
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  align-items: center; 
+  margin-top: 20px;
 }
 
 .patient-form-section h3{
@@ -388,10 +409,6 @@ const clearAll = () => {
 .patient-form{
   width: 100%;
   max-width: 280px;
-}
-
-.upload-section {
-  align-items: center; 
 }
 
 .model-and-btn{
@@ -435,10 +452,12 @@ const clearAll = () => {
   width: 200px;
   height: 200px;
   margin-bottom: 12px;
+  border-radius: 8px;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: #f5f5f5;
+  position: relative;
 }
 
 .selected-img {
@@ -449,57 +468,16 @@ const clearAll = () => {
 
 .file-selected p{
   margin-bottom: 12px;
+  max-width: 200px; 
+  overflow: hidden; 
+  text-overflow: ellipsis;
 }
 
-.model-selection{
+.btn-group{
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  gap: 12px;
   width: 100%;
-  margin-bottom: 16px;
-}
-
-.model-btn-group{
-  display: flex;
-  gap: 10px;
-  margin-top: auto; 
-}
-
-.model-btn {
-  background-color: #67c23a;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  margin-bottom: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.clear-btn,
-.predict-btn {
-  width: 25%;
-  white-space: nowrap;
-  padding: 6px 8px !important;
-  font-size: 15px !important;
-}
-
-.model-btn:hover {
-  background-color: #85ce61;
-}
-
-.clear-model-btn{
-  background-color: #f56c6c;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.clear-model-btn:hover{
-  background-color: #fa8989;
+  justify-content: center;
 }
 
 .model-name {
@@ -520,43 +498,6 @@ p{
   font-weight: bold;
 }
 
-.btn-group{
-  display: flex;
-  gap: 10px;
-}
-
-.predict-btn{
-  background-color: #409eff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.predict-btn:hover{
-  background-color: #66b1ff;
-}
-
-.predict-btn:disabled{
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.clear-btn{
-  background-color: #fff;
-  color: #409eff;
-  border: 1px solid #409eff;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.clear-btn:hover{
-  background-color: #e6f7ff;
-}
-
 .loading {
   color: #409eff;
   margin: 16px 0;
@@ -573,7 +514,7 @@ p{
   background-color: #fff0dc;
   padding: 16px;
   border-radius: 12px;
-  box-shadow: 0 4px 16px #aeaeae;
+  box-shadow: 0 6px 18px #aeaeae;
   overflow-y: auto;
 }
 
