@@ -64,7 +64,7 @@ const fetchTrainLog = async () => {
     if (trainLog.value && trainLog.value.includes('TRAIN_STOPPED')) {
       stopLogPolling()
       isRunning.value = false
-      trainStatus.value = '训练已停止'
+      trainStatus.value = '训练被终止'
       ElMessage.info('训练被终止')
     }
   } catch (err) {
