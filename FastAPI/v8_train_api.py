@@ -78,9 +78,11 @@ async def train(
             with open(log_file_path, "a", encoding="utf-8") as lf:
                 if return_code == 0:
                     lf.write(f"[{timestamp}] 训练结束\n")
+                    lf.write("TRAIN_FINISHED\n")
                 else:
                     lf.write(f"\n[{timestamp}] 训练异常 (Exit Code: {return_code})\n")
                     lf.write(f"提示: 如果退出码很大(如3221225477)，通常是显存溢出(OOM)。\n")
+                    lf.write("TRAIN_ERROR\n")
                 lf.flush()
         except Exception:
             pass
@@ -125,6 +127,7 @@ async def stop_train():
         try:
             with open("train.log", "a", encoding="utf-8") as lf:
                 lf.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 训练终止 (pid={pid})\n")
+                lf.write("TRAIN_STOPPED\n")
                 lf.flush()
         except Exception:
             pass

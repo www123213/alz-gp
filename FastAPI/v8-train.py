@@ -90,7 +90,7 @@ def augment_dataset_offline(train_dir):
     else:
         print("ℹ️  未生成新图像（可能已生成）")
 
-def create_validation_split(train_dir, valid_dir, split_ratio=0.15):
+def create_validation_split(train_dir, valid_dir, split_ratio=0.3):
     """划分验证集"""
     if os.path.exists(valid_dir) and any(os.scandir(valid_dir)): return
 
@@ -163,7 +163,7 @@ def rename_and_cleanup_models(results_save_dir, final_accuracy):
     
     accuracy_str = f"{final_accuracy:.2f}%".replace('.', '_')
     best_pt = os.path.join(weights_dir, 'best.pt')
-    new_best_name = f"acc-top1-{accuracy_str}.pt"
+    new_best_name = f"Top-1-{accuracy_str}.pt"
     
     if os.path.exists(best_pt):
         try:
@@ -218,7 +218,7 @@ def main():
         print(f"\n🤖 加载模型: {model_name}")
         model = YOLO(model_name)
 
-        results_name = f'alz_cls_v8_{args.model_type}_{datetime.now().strftime("%m%d_%H%M")}'
+        results_name = f'YOLOv8{args.model_type}-cls-{datetime.now().strftime("%m%d-%H%M")}'
         
         print(f"\n🚀 开始训练 (日志将保存在 results/{results_name})...")
         print("=" * 60)
@@ -232,7 +232,7 @@ def main():
             project='results',
             name=results_name,
             val=True,
-            patience=10,
+            patience=5,
             save_period=-1,
             workers=4,
             device=0,
