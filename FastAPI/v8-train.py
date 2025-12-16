@@ -63,10 +63,15 @@ def augment_dataset_offline(train_dir):
     print("\n🎨 正在生成模拟病人运动的MRI图像...")
     
     transform = A.Compose([
-        A.MotionBlur(blur_limit=(15, 31), p=1.0),
+        A.MotionBlur(blur_limit=(25, 45), p=1.0), #动态模糊
+        A.GaussNoise(limit=(10.0, 25.0), p=0.7), #高斯噪声
+        #亮度、对比度±30%
+        A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.3) 
     ])
 
     aug_count = 0
+    augment_ratio = 0.3 #仅对30%原图增强
+    random.seed(42)
     
     for root, dirs, files in os.walk(train_dir):
         for file in files:
@@ -75,6 +80,8 @@ def augment_dataset_offline(train_dir):
                 expected_aug_path = os.path.join(root, f"{file_name}_aug_mri{ext}")
                 
                 if os.path.exists(expected_aug_path): continue 
+                #随机生成30%动态模糊样本
+                if random.random() > augment_ratio: continue
 
                 img_path = os.path.join(root, file)
                 try:
@@ -163,7 +170,7 @@ def rename_and_cleanup_models(results_save_dir, final_accuracy):
     
     accuracy_str = f"{final_accuracy:.2f}%".replace('.', '_')
     best_pt = os.path.join(weights_dir, 'best.pt')
-    new_best_name = f"Top-1-{accuracy_str}.pt"
+    new_best_name = f"Top1-{accuracy_str}.pt"
     
     if os.path.exists(best_pt):
         try:
@@ -232,7 +239,7 @@ def main():
             project='results',
             name=results_name,
             val=True,
-            patience=5,
+            patience=8,
             save_period=-1,
             workers=4,
             device=0,
