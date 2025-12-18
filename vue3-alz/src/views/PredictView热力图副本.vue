@@ -13,6 +13,11 @@ const error = ref('')
 const loading = ref(false)
 const formRef = ref(null)
 
+const getResultImageUrl = (path) => {
+  if (!path) return ''
+  return `http://localhost:8000/${path}`
+}
+
 // 初始化加载默认推理模型
 onMounted(async () => {
   // 在public目录下读取默认模型，名为Top1-98_63%.pt
@@ -159,6 +164,7 @@ const onPredict = async () => {
       out.all_results = data.all_results ?? data.result?.all_results ?? out.all_results
       out.bboxes = data.bboxes ?? data.result?.bboxes ?? out.bboxes
 
+      out.heatmap_path = data.heatmap_path ?? data.result?.heatmap_path ?? out.heatmap_path
       // 有时后端会把推理结果放在 result 字段里
       if ((!out.main_class || out.main_class === null) && data.result) {
         out.main_class = data.result.main_class ?? out.main_class
@@ -311,11 +317,31 @@ const clearAll = () => {
         <h3>📊 主要诊断结果：<b>{{ classNamesZh[result.main_class] || result.main_class }}</b></h3>
         <h3>置信度：<b style="color: darkgreen; font-weight: bold;">
         {{ ((result.confidence ?? 0) * 100).toFixed(2) }}%
-        </b></h3>
+          </b>
+        </h3>
       </div>
 
       <hr>
       
+      <div class="result-section">
+        <h3>可解释性分析（Grad-CAM）：</h3>
+        <div class="image-comparison">
+          <div class="img-box" v-if="result.heatmap_path">
+            <p>AI 关注热力图</p>
+            <img 
+            :src="getResultImageUrl(result.heatmap_path)" 
+            alt="热力图"
+            class="result-img"
+            />
+            <div class="heatmap-tip">红色区域为模型判断病灶依据</div>
+          </div>
+
+          <div class="img-box" v-else>
+            <p>热力图生成失败</p>
+          </div>
+        </div>
+      </div>
+
       <div class="result-section">
         <h3>📈 详细概率分布：</h3>
         <ul class="prob-list" style="list-style: decimal;">
@@ -549,6 +575,18 @@ hr {
 
 h3{
   font-weight: bold;
+}
+
+.image-comparison{
+  display: flex;
+  justify-content: center;
+}
+
+.result-img {
+  width: 240px;
+  height: 240px;
+  object-fit: cover;
+  border: 1px solid #ddd;
 }
 @media screen and (max-width: 1640px) {
   h2 {
