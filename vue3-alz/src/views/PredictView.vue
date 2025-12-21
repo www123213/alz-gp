@@ -15,8 +15,8 @@ const formRef = ref(null)
 
 // 初始化加载默认推理模型
 onMounted(async () => {
-  // 在public目录下读取默认模型，名为Top1-98_63%.pt
-  const defaultModelName = 'Top1-98_63%.pt'
+  // 在public目录下读取默认模型，名为Top1-99_13%.pt
+  const defaultModelName = 'Top1-99_13%.pt'
   try {
     const response = await fetch(`/${defaultModelName}`)
     if (response.ok) {
