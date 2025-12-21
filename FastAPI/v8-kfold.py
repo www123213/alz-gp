@@ -7,7 +7,7 @@ import hashlib
 import pandas as pd
 import albumentations as A
 import matplotlib.pyplot as plt
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from ultralytics import YOLO
 
 def calculate_file_hash(file_path, block_size=65536):
@@ -203,8 +203,8 @@ def main():
     k_input = input("🔄 请输入交叉验证折数 (默认5): ").strip()
     kfold_num = int(k_input) if k_input.isdigit() else 5
     
-    e_input = input("⏳ 请输入每折训练轮数 (默认30): ").strip()
-    epochs = int(e_input) if e_input.isdigit() else 30
+    e_input = input("⏳ 请输入每折训练轮数 (默认50): ").strip()
+    epochs = int(e_input) if e_input.isdigit() else 50
     
     b_input = input("📦 请输入批次大小 (默认8): ").strip()
     batch_size = int(b_input) if b_input.isdigit() else 8
@@ -236,6 +236,7 @@ def main():
     # 3. 收集数据
     print("📦 正在索引原始数据集...")
     all_data = [] 
+    y_labels = []
     classes = [d for d in os.listdir(train_source) if os.path.isdir(os.path.join(train_source, d))]
     classes.sort()
     
@@ -244,19 +245,26 @@ def main():
         files = [f for f in os.listdir(cls_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg', '.bmp'))]
         for f in files:
             all_data.append((os.path.join(cls_dir, f), cls))
+            y_labels.append(cls)
             
     print(f"📊 原始数据总量: {len(all_data)} 张")
+    print(f"📊 类别分布: {pd.Series(y_labels).value_counts().to_dict()}")
 
     # 4. K-Fold 循环
-    kf = KFold(n_splits=kfold_num, shuffle=True, random_state=42)
+    kf = StratifiedKFold(n_splits=kfold_num, shuffle=True, random_state=42)
     acc_scores = []
     
-    temp_work_dir = os.path.join(dataset_root, 'kfold_temp_workspace')
+    temp_work_dir = os.path.join(dataset_root, 'kfold_temporary')
     if os.path.exists(temp_work_dir): shutil.rmtree(temp_work_dir)
     
-    for fold, (train_idx, val_idx) in enumerate(kf.split(all_data)):
+    for fold, (train_idx, val_idx) in enumerate(kf.split(all_data, y_labels)):
         print(f"\n{'='*20} Fold {fold+1} / {kfold_num} {'='*20}")
         
+        fold_train_labels = [y_labels[i] for i in train_idx]
+        fold_val_labels = [y_labels[i] for i in val_idx]
+        print(f"📊 当前折训练集类别分布: {pd.Series(fold_train_labels).value_counts().to_dict()}")
+        print(f"📊 当前折验证集类别分布: {pd.Series(fold_val_labels).value_counts().to_dict()}")
+
         # (A) 创建目录
         current_fold_dir = os.path.join(temp_work_dir, f'fold_{fold+1}')
         fold_train_dir = os.path.join(current_fold_dir, 'train')
@@ -287,7 +295,6 @@ def main():
             
             model = YOLO(model_name) 
             
-            # === [关键] 这里的所有参数现在与你的 v8-train.py 完全对齐 ===
             results = model.train(
                 data=current_fold_dir,
                 epochs=epochs,
@@ -296,7 +303,7 @@ def main():
                 project='kfold_results', 
                 name=f'fold_{fold+1}',
                 
-                patience=8,     
+                patience=10,     
                 save_period=-1,  
                 workers=4,      
                 device=0,       
@@ -342,9 +349,9 @@ def main():
             acc_scores.append(0.0)
 
     # 5. 最终统计与绘图
-    print("\n" + "#"*50)
-    print(f"📊 {kfold_num}折交叉验证最终报告")
-    print("#"*50)
+    print("\n" + "-"*50)
+    print(f"📊 {kfold_num}折分层交叉验证最终报告")
+    print("-"*50)
     print(f"各折准确率: {[f'{x:.2f}%' for x in acc_scores]}")
     
     if len(acc_scores) > 0:
@@ -353,7 +360,7 @@ def main():
         print(f"✅ 平均准确率: {avg_acc:.2f}%")
         print(f"📉 标准差: ±{std_dev:.2f}%")
         print("\n📝 实验结论:")
-        print(f"1. 泛化验证 (K-Fold): {avg_acc:.2f}%")
+        print(f" 泛化验证 (K-Fold): {avg_acc:.2f}%")
         
         # 自动绘图
         plot_kfold_summary(acc_scores)

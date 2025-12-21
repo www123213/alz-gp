@@ -239,7 +239,7 @@ def main():
             project='results',
             name=results_name,
             val=True,
-            patience=8,
+            patience=10,
             save_period=-1,
             workers=4,
             device=0,
