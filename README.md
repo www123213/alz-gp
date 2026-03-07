@@ -1,9 +1,9 @@
-## 前端安装依赖
+## 前端安装依赖 ***/vue3-alz/
 ```sh
 npm install
 ```
 
-## 前端启动
+## 前端启动 ***/FastAPI/
 ```sh
 npm run dev
 ```
