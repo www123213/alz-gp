@@ -1,14 +1,14 @@
-## 前端安装依赖 ***/vue3-alz/
+## 前端安装依赖  ***/vue3-alz/
 ```sh
 npm install
 ```
 
-## 前端启动 ***/FastAPI/
+## 前端启动 
 ```sh
 npm run dev
 ```
 
-## 后端FastAPI启动
+## 后端FastAPI启动  ***/FastAPI/
 ```sh
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
